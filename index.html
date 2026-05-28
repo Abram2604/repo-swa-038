@@ -1,20 +1,113 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
- <meta charset="UTF-8">
- <title>Praktikum Azure Static Web Apps</title>
- <style>
- body { font-family: Arial; margin: 40px; background: #f4f6f8; }
- .container { background: white; padding: 24px; border-radius: 12px; }
- h1 { color: #1f4e79; }
- </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informasi Kegiatan & Estimasi Biaya Mahasiswa</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; background: #f0f4f8; color: #333; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #1f4e79; border-bottom: 2px solid #1f4e79; padding-bottom: 10px; margin-top: 0; }
+        .identitas { background: #eef2f7; padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 5px solid #1f4e79; }
+        .identitas p { margin: 5px 0; font-size: 14px; }
+        .layanan-list { margin-bottom: 25px; }
+        .layanan-badge { display: inline-block; background: #1f4e79; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; margin: 4px; font-weight: bold; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #218838; }
+        .result-box { margin-top: 25px; padding: 20px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; display: none; }
+        .result-box h3 { margin-top: 0; color: #2e7d32; }
+        pre { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 8px; font-size: 13px; overflow-x: auto; }
+    </style>
 </head>
 <body>
- <div class="container">
- <h1>Praktikum Azure Static Web Apps - Abdul Ramalah</h1>
- <p>Halaman ini berhasil di-deploy menggunakan Azure Static Web Apps.</p>
- <p>Layanan: Azure Static Web Apps</p>
- <p>Deployment: GitHub Repository</p>
- </div>
+
+<div class="container">
+    <h1>Seminar Cloud Computing 2026</h1>
+    <p>Selamat datang di halaman resmi informasi kegiatan Seminar Nasional Komputasi Awan dan Serverless Technology 2026.</p>
+
+    <!-- IDENTITAS MAHASISWA (Exercise) -->
+    <div class="identitas">
+        <strong>Identitas Praktikan:</strong>
+        <p>Nama: Abram</p>
+        <p>NIM: 0920240038</p>
+        <p>Kelas: Teknologi Rekayasa Perangkat Lunak (TRPL)</p>
+    </div>
+
+    <!-- DAFTAR LAYANAN AZURE (Exercise) -->
+    <div class="layanan-list">
+        <strong>Layanan Azure yang Digunakan:</strong><br>
+        <span class="layanan-badge">Azure Static Web Apps</span>
+        <span class="layanan-badge">Azure App Service</span>
+        <span class="layanan-badge">Azure Container Apps</span>
+        <span class="layanan-badge">Azure Functions</span>
+    </div>
+
+    <!-- KALKULATOR INTERAKTIF (Mini Project) -->
+    <h2 style="color: #1f4e79;">Kalkulator Estimasi Konsumsi</h2>
+    <div class="form-group">
+        <label for="jumlah">Jumlah Peserta:</label>
+        <input type="number" id="jumlah" placeholder="Masukkan jumlah peserta (contoh: 40)" min="1">
+    </div>
+
+    <div class="form-group">
+        <label for="jenis">Jenis Konsumsi:</label>
+        <select id="jenis">
+            <option value="snack">Snack (Rp 15.000)</option>
+            <option value="makan">Makan (Rp 30.000)</option>
+            <option value="lengkap">Lengkap (Rp 45.000)</option>
+        </select>
+    </div>
+
+    <button onclick="hitungEstimasi()">Hitung Estimasi Biaya</button>
+
+    <!-- TEMPAT HASIL PERHITUNGAN -->
+    <div id="resultBox" class="result-box">
+        <h3>Hasil Perhitungan (Respon API):</h3>
+        <p><strong>Total Estimasi:</strong> <span id="totalText" style="font-size: 20px; color: #2e7d32; font-weight: bold;">Rp 0</span></p>
+        <p>Detail JSON dari Azure Functions:</p>
+        <pre><code id="jsonOutput">Fetching...</code></pre>
+    </div>
+</div>
+
+<script>
+    async function hitungEstimasi() {
+        const jumlah = document.getElementById('jumlah').value;
+        const jenis = document.getElementById('jenis').value;
+        const resultBox = document.getElementById('resultBox');
+        const totalText = document.getElementById('totalText');
+        const jsonOutput = document.getElementById('jsonOutput');
+
+        if (!jumlah || jumlah <= 0) {
+            alert("Harap masukkan jumlah peserta yang valid!");
+            return;
+        }
+
+        resultBox.style.display = 'block';
+        jsonOutput.innerText = "Memproses perhitungan di Azure Functions...";
+        const functionUrl = "https://func-serverless-038-cgahaudsdffbevfx.malaysiawest-01.azurewebsites.net/api/EstimasiBiaya";
+        const requestUrl = `${functionUrl}?jumlah=${jumlah}&jenis=${jenis}`;
+
+        try {
+            const response = await fetch(requestUrl);
+            const data = await response.json();
+
+            if (response.ok) {
+                // Tampilkan total biaya dalam format Rupiah
+                totalText.innerText = "Rp " + data.total.toLocaleString('id-ID');
+                // Tampilkan full response JSON
+                jsonOutput.innerText = JSON.stringify(data, null, 2);
+            } else {
+                jsonOutput.innerText = "Error: " + (data.error || "Gagal mengambil data.");
+            }
+        } catch (error) {
+            jsonOutput.innerText = "Koneksi Gagal: Pastikan Anda sudah mengaktifkan CORS di Azure Functions Anda.";
+            console.error(error);
+        }
+    }
+</script>
+
 </body>
 </html>
